@@ -1,0 +1,104 @@
+flagembedding
+# =========================
+# Core LLM / RAG Framework
+# =========================
+langchain>=0.3.0
+langchain-community>=0.3.0
+langchain-core>=0.3.0
+langchain-text-splitters>=0.3.0
+langchain-experimental>=0.3.0
+
+# =========================
+# Embeddings + Transformers
+# =========================
+sentence-transformers>=3.0.0
+transformers>=4.45.0
+torch>=2.4.0
+accelerate>=0.34.0
+
+# =========================
+# Vector Database
+# =========================
+qdrant-client>=1.11.0
+
+# =========================
+# Sparse Retrieval
+# =========================
+rank-bm25>=0.2.2
+
+# =========================
+# RAG Evaluation
+# =========================
+ragas>=0.2.0
+datasets>=2.21.0
+
+# =========================
+# API Backend
+# =========================
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
+pydantic>=2.9.0
+
+# =========================
+# Frontend UI
+# =========================
+streamlit>=1.39.0
+
+# =========================
+# Document Loading
+# =========================
+pypdf>=5.0.0
+pymupdf >= 1.27.2.3
+docx2txt>=0.8
+unstructured>=0.16.0
+
+# =========================
+# Environment Variables
+# =========================
+python-dotenv>=1.0.1
+
+# =========================
+# AWS
+# =========================
+boto3>=1.35.0
+
+# =========================
+# Testing
+# =========================
+pytest>=8.3.0
+httpx>=0.27.0
+
+# =========================
+# Utilities
+# =========================
+numpy>=1.26.0
+pandas>=2.2.0
+tqdm>=4.66.0
+
+# =========================
+# Logging
+# =========================
+loguru>=0.7.2
+
+# =========================
+# Optional LLM Providers
+# =========================
+openai>=1.52.0
+groq>=0.11.0
+mistralai
+google-genai
+
+# =========================
+# Tokenization
+# =========================
+tiktoken>=0.8.0
+
+langsmith>=0.1.130
+
+# =========================
+# Notebook Support
+# =========================
+jupyter>=1.1.1
+ipykernel>=6.29.5
+matplotlib>=3.9.0
