@@ -7,6 +7,7 @@ langchain-community>=0.3.0
 langchain-core>=0.3.0
 langchain-text-splitters>=0.3.0
 langchain-experimental>=0.3.0
+langchain-huggingface
 
 # =========================
 # Embeddings + Transformers
@@ -20,7 +21,7 @@ accelerate>=0.34.0
 # Vector Database
 # =========================
 qdrant-client>=1.11.0
-
+qdrant-client[fastembed]>=1.14.2
 # =========================
 # Sparse Retrieval
 # =========================

@@ -2,6 +2,9 @@ from fastapi import APIRouter, UploadFile, File
 import shutil
 from pathlib import Path
 
+from src.ingestion.loader import load_pdf
+from src.ingestion.chunker import pdf_chunker
+
 router = APIRouter()
 
 UPLOAD_DIR = Path("data/raw")
@@ -14,6 +17,12 @@ async def ingest_pdf(file: UploadFile = File(...)):
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
+
+    # loading the uploaded pdf
+    documents = load_pdf(str(file_path))
+    
+    # chunking the document
+    chunks = pdf_chunker(documents)
 
     return {
         "message": "File uploaded successfully",
