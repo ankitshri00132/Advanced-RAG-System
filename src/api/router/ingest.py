@@ -4,6 +4,7 @@ from pathlib import Path
 
 from src.ingestion.loader import load_pdf
 from src.ingestion.chunker import pdf_chunker
+from src.ingestion.embedder import embed_chunks
 
 router = APIRouter()
 
@@ -17,6 +18,8 @@ async def ingest_pdf(file: UploadFile = File(...)):
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
+    
+    print(f"{file.filename} uploaded successfully !")
 
     # loading the uploaded pdf
     documents = load_pdf(str(file_path))
@@ -24,7 +27,9 @@ async def ingest_pdf(file: UploadFile = File(...)):
     # chunking the document
     chunks = pdf_chunker(documents)
 
+    # creating and storing the vectors of the chunks in qdrant db
+    embed_chunks(chunks)
+
     return {
-        "message": "File uploaded successfully",
-        "filename": file.filename
+        "message": "Vectors successfully stored in Qdrant DB"
     }
