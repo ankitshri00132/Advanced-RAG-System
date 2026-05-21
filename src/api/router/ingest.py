@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile, File
 import shutil
 from pathlib import Path
+import uuid
 
 from src.ingestion.loader import load_pdf
 from src.ingestion.chunker import pdf_chunker
@@ -23,13 +24,20 @@ async def ingest_pdf(file: UploadFile = File(...)):
 
     # loading the uploaded pdf
     documents = load_pdf(str(file_path))
+    document_id = str(uuid.uuid4())
+    page_count = len(documents)
     
     # chunking the document
     chunks = pdf_chunker(documents)
+    chunks_count = len(chunks)
 
     # creating and storing the vectors of the chunks in qdrant db
-    embed_chunks(chunks)
+    embed_chunks(chunks=chunks,document_id=document_id,filename = file.filename)
 
     return {
+        "status":"success",
+        "document_id":document_id,
+        "pages_loaded":page_count,
+        "chunks_created":chunks_count,
         "message": "Vectors successfully stored in Qdrant DB"
     }

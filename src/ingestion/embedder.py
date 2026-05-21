@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def embed_chunks(chunks: list):
+def embed_chunks(chunks: list,document_id,filename):
     client = QdrantClient(url='http://localhost:6333')
 
     dense_vector_name = 'dense'
@@ -15,8 +15,11 @@ def embed_chunks(chunks: list):
     # create a dict which contains page content and its metadata
     metadata_with_chunks = [
         {
-            'document': chunk.page_content,
-            'source': chunk.metadata
+            'document_id':document_id,
+            'file_name':filename,
+            'text': chunk.page_content,
+            'page': chunk.metadata.get("page"),
+            'title':chunk.metadata.get('title')
         }
         for chunk in chunks
     ]
@@ -37,7 +40,7 @@ def embed_chunks(chunks: list):
 
         )
         print("Collection created !")
-
+    # uploading the embeddings to the db
     client.upload_collection(
         collection_name='main_vector_store',
         vectors=[
@@ -51,3 +54,4 @@ def embed_chunks(chunks: list):
         ids=[str(uuid.uuid4()) for _ in range(len(chunks))]
     )
     print("Embeddings updated in Qdrant DB !")
+    print("Embedding Dimension : ", client.get_embedding_size(dense_model_name))
