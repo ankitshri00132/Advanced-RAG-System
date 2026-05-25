@@ -8,6 +8,9 @@ langchain-core>=0.3.0
 langchain-text-splitters>=0.3.0
 langchain-experimental>=0.3.0
 langchain-huggingface
+langchain-groq
+langchain-google-genai
+langchain-mistralai
 
 # =========================
 # Embeddings + Transformers
@@ -81,14 +84,6 @@ tqdm>=4.66.0
 # Logging
 # =========================
 loguru>=0.7.2
-
-# =========================
-# Optional LLM Providers
-# =========================
-openai>=1.52.0
-groq>=0.11.0
-mistralai
-google-genai
 
 # =========================
 # Tokenization

@@ -1,40 +1,35 @@
-from fastapi import APIRouter,HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from src.retriever.hybrid_retriever import HybridRetriever,qdrant_client
-from src.retriever.reranker import get_reranked_documents,reranker
+from src.graph.rag_graph import build_graph
 
 router = APIRouter()
 
-searcher = HybridRetriever(collection_name= "main_vector_store",qdrant_client=qdrant_client)
+rag_app = build_graph()
+
 
 class SearchRequest(BaseModel):
-    query : str
-    top_k : int = 3
+    query: str
+
 
 @router.post('/retrieve')
-async def retrieve_chunks(request : SearchRequest):
+async def retrieve_chunks(request: SearchRequest):
     if not request.query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty")
 
     try:
-        retrieved_results = searcher.search(
-            query_text= request.query
-            )
 
-        reranked_results = get_reranked_documents(
-            query = request.query,
-            retrieved_results= retrieved_results,
-            top_k= request.top_k
-            )
+        result = rag_app.invoke({         # --> result has the final_state of the graph
+            'query': request.query
+        })
 
         return {
-            "query":request.query,
-            "result":reranked_results
-            }
+            'query': request.query,
+            'answer': result['answer'],
+            'sources': result['reranked_results']
+        }
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=str(e)
         )
-
