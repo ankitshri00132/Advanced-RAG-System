@@ -2,9 +2,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from qdrant_client import QdrantClient,models
+from langsmith import traceable
 
 qdrant_client = QdrantClient(url='http://localhost:6333')
 
+@traceable(name="hybrid_retriever",run_type="retriever")
 class HybridRetriever :
     DENSE_MODEL = 'BAAI/bge-small-en-v1.5'
     SPARSE_MODEL = 'Qdrant/bm42-all-minilm-l6-v2-attentions'

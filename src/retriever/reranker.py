@@ -1,9 +1,11 @@
 from typing import List, Dict, Any
 from fastembed.rerank.cross_encoder import TextCrossEncoder
+from langsmith import traceable
 
 # Initialize the reranker
 reranker = TextCrossEncoder("jinaai/jina-reranker-v1-tiny-en")
 
+@traceable(name="reranking_chunks")
 def get_reranked_documents(
     query: str, 
     retrieved_results: List[Dict[str, Any]], 
