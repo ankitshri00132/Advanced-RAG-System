@@ -41,6 +41,9 @@ Unlike tutorial chatbots, this is a fully observable, evaluated, and containeris
 ## High Level Design of the System
 ![Alt text](assets/hld_rag_platform.svg)
 
+### CRAG Graph 
+![Alt text](assets/output.png)
+
 ---
 
 ## ✨ Key Features

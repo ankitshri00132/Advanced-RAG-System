@@ -1,11 +1,13 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from src.graph.rag_graph import build_graph
+from src.graph.rag_graph import build_graph as rag
+from src.graph.crag_graph import build_graph as crag
 
 router = APIRouter()
 
-rag_app = build_graph()
+rag_app = rag()
+crag_app = crag()
 
 
 class SearchRequest(BaseModel):
@@ -19,14 +21,14 @@ async def retrieve_chunks(request: SearchRequest):
 
     try:
 
-        result = await rag_app.ainvoke({         # --> result has the final_state of the graph
+        result = await crag_app.ainvoke({         # --> result has the final_state of the graph
             'query': request.query
         })
 
         return {
             'query': request.query,
             'answer': result['answer'],
-            'sources': result['reranked_results']
+            'sources': result.get('reranked_results', [])
         }
     except Exception as e:
         raise HTTPException(

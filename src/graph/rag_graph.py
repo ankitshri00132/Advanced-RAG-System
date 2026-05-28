@@ -4,11 +4,13 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from typing import TypedDict, List, Dict
+from dotenv import load_dotenv
 import asyncio
 
 from src.retriever.hybrid_retriever import HybridRetriever, qdrant_client
 from src.retriever.reranker import reranker, get_reranked_documents
 
+load_dotenv()
 
 llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
 # llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite", temperature=0)
