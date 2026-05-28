@@ -19,7 +19,7 @@ async def retrieve_chunks(request: SearchRequest):
 
     try:
 
-        result = rag_app.invoke({         # --> result has the final_state of the graph
+        result = await rag_app.ainvoke({         # --> result has the final_state of the graph
             'query': request.query
         })
 

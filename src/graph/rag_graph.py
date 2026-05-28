@@ -4,6 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from typing import TypedDict, List, Dict
+import asyncio
 
 from src.retriever.hybrid_retriever import HybridRetriever, qdrant_client
 from src.retriever.reranker import reranker, get_reranked_documents
@@ -76,21 +77,21 @@ prompt_template = ChatPromptTemplate([
 
 
 # building nodes
-def retriever_node(state: RagState):
+async def retriever_node(state: RagState):
     query = state['query']
-    results = searcher.search(query_text=query)
+    results = await asyncio.to_thread(searcher.search, query_text=query)
     return {'retrieved_results': results}
 
 
-def reranker_node(state: RagState):
+async def reranker_node(state: RagState):
     query = state['query']
     retrieved_results = state['retrieved_results']
-    reranked_results = get_reranked_documents(
-        query=query, retrieved_results=retrieved_results, top_k=3)
+    reranked_results = await asyncio.to_thread(
+        get_reranked_documents, query=query, retrieved_results=retrieved_results, top_k=3)
     return {'reranked_results': reranked_results}
 
 
-def answer_node(state: RagState):
+async def answer_node(state: RagState):
 
     query = state['query']
     context = state['reranked_results']
@@ -109,7 +110,7 @@ def answer_node(state: RagState):
         'context': context
     })
 
-    response = llm.invoke(final_prompt)
+    response = await llm.ainvoke(final_prompt)
     return {'answer': response.content}
 
 # building the graph
