@@ -28,14 +28,15 @@
 
 ## 📋 Overview
 
-A production-grade document intelligence system where users upload PDF documents and ask questions in natural language. The system retrieves the most relevant passages using **Qdrant hybrid search** (dense BGE vectors + sparse BM42 vectors with native RRF fusion), re-ranks them using a **cross-encoder**, and generates grounded, cited answers using **Groq LLaMA-3.3-70B** — all orchestrated through a **LangGraph** stateful graph.
+A production-grade document intelligence system where users upload PDF documents and ask questions in natural language. The system retrieves the most relevant passages using **Qdrant hybrid search** (dense BGE vectors + sparse BM42 vectors with native RRF fusion), re-ranks them using a **cross-encoder**, and generates grounded, cited answers using **Groq LLaMA-3.3-70B** — all orchestrated through a **LangGraph** stateful graph with **Corrective RAG (CRAG)** self-correction.
 
 Unlike tutorial chatbots, this is a fully observable, evaluated, and containerised inference service with:
 - **Hybrid retrieval** combining semantic understanding and keyword matching in a single Qdrant query
 - **Cross-encoder re-ranking** for precision over the top-k results
-- **LangGraph orchestration** with self-correcting retrieval (Adaptive RAG + CRAG pattern) *(in progress)*
+- **LangGraph orchestration** with self-correcting retrieval (Adaptive RAG + CRAG pattern) — document grading, query rewriting, retry loops, and web search fallback
+- **Adaptive query routing** — intelligent classification into document retrieval vs. direct LLM generation
 - **Full observability** via LangSmith tracing across every graph node
-- **Automated evaluation** using RAGAS metrics *(upcoming)*
+- **Evaluation** using RAGAS metrics (faithfulness, answer relevance, context recall)
 
 ---
 ## High Level Design of the System
@@ -57,55 +58,15 @@ Unlike tutorial chatbots, this is a fully observable, evaluated, and containeris
 | 🔗 LangGraph Pipeline | ✅ Implemented | Stateful graph: Retrieve → Rerank → Generate with typed state |
 | 🌐 FastAPI REST Service | ✅ Implemented | `/ingest` and `/retrieve` endpoints with auto-generated OpenAPI docs |
 | 📊 LangSmith Tracing | ✅ Implemented | Full observability with `@traceable` decorators on retrieval and reranking |
-| 🔄 CRAG Self-Correction | 🚧 In Progress | Query rewriting, document grading, retry loops, and web search fallback |
-| 🌐 Adaptive Query Routing | 🚧 In Progress | Intelligent routing — direct retrieval vs. web search based on query analysis |
-| 📈 RAGAS Evaluation | 📅 Planned | Faithfulness, answer relevance, context recall, and context precision scoring |
+| 🔄 CRAG Self-Correction | ✅ Implemented | Query rewriting, document grading, retry loops, and web search fallback |
+| 🌐 Adaptive Query Routing | ✅ Implemented | Intelligent routing — direct retrieval vs. web search based on query analysis |
+| 📈 RAGAS Evaluation | ✅ Implemented | Faithfulness, answer relevance, context recall, and context precision scoring |
 | 🖥️ Streamlit UI | 📅 Planned | File upload panel, query interface, source viewer, and graph path display |
 | 🐳 Docker Compose Stack | 📅 Planned | Qdrant + Backend + Frontend as a single deployable stack |
 | 🚀 AWS Deployment | 📅 Planned | CI/CD via GitHub Actions → ECR → EC2 |
 
 ---
 
-## 🏗️ System Architecture
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                      INGESTION PIPELINE                          │
-│                                                                  │
-│  PDF Upload ──► PyMuPDF Loader ──► Recursive Chunker ──► Qdrant  │
-│                   (load_pdf)        (500 chars,          (Dual   │
-│                                     60 overlap)          Vector) │
-│                                        │                         │
-│                         BGE Dense Embeddings ──────►┐            │
-│                         BM42 Sparse Vectors ───────►├► Qdrant    │
-│                                                     │  Collection│
-└─────────────────────────────────────────────────────┴────────────┘
-                                                   │
-                           ┌───────────────────────┘
-                           ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                  LANGGRAPH RAG PIPELINE                          │
-│                                                                  │
-│   User Query ──► Hybrid Search ──► Cross-Encoder ──► LLM Answer  │
-│                  (Qdrant RRF)      Reranking         (Groq)      │
-│                  Dense + BM42      Top-3 chunks      LLaMA-3.3   │
-│                  Top-10 results                      70B         │
-│                                                                  │
-│   ┌─────────── UPCOMING: CRAG SELF-CORRECTION ───────────────┐   │
-│   │                                                          │   │
-│   │  Analyze ──► Retrieve ──► Grade Docs ──► Transform Query │   │
-│   │     │             │            │               │         │   │
-│   │     │         Generate ◄── Web Search Fallback           │   │
-│   │     │             │                                      │   │
-│   │  Web Search   Check Answer ──► Response                  │   │
-│   │  (fallback)                                              │   │
-│   └──────────────────────────────────────────────────────────┘   │
-└──────────────────────────────────────────────────────────────────┘
-           │              │              │              │
-    LangSmith Traces   RAGAS Eval    Qdrant Store   Groq API
-```
-
----
 
 ## 🛠️ Tech Stack
 
@@ -122,7 +83,7 @@ Unlike tutorial chatbots, this is a fully observable, evaluated, and containeris
 | **Orchestration** | `LangGraph` | Stateful graph with conditional edges — essential for self-correcting RAG |
 | **Observability** | `LangSmith` | Traces every graph node — latency, token usage, I/O, graph path |
 | **API** | `FastAPI + Uvicorn` | Async, typed, auto-generated OpenAPI documentation |
-| **Evaluation** | `RAGAS` *(planned)* | Faithfulness, answer relevance, context recall, context precision |
+| **Evaluation** | `RAGAS` | Faithfulness, answer relevance, context recall, context precision |
 | **Containerisation** | `Docker + Docker Compose` *(planned)* | Qdrant + API + UI as a single deployable stack |
 | **Cloud** | `AWS (EC2 + ECR + S3)` *(planned)* | Production deployment target with CI/CD |
 
@@ -144,7 +105,8 @@ Advanced-RAG-System/
 │   │   └── reranker.py            # Cross-encoder re-ranking with Jina reranker
 │   │
 │   ├── graph/
-│   │   └── rag_graph.py           # LangGraph state machine: Retrieve → Rerank → Generate
+│   │   ├── rag_graph.py           # LangGraph linear pipeline: Retrieve → Rerank → Generate
+│   │   └── crag_graph.py          # LangGraph CRAG pipeline: Route → Retrieve → Rerank → Grade → Transform → Web Search → Generate
 │   │
 │   └── api/
 │       ├── main.py                # FastAPI app — mounts ingest & retrieve routers
@@ -154,7 +116,8 @@ Advanced-RAG-System/
 │
 ├── notebooks/
 │   ├── testing_notebook.ipynb     # Experimentation and component testing
-│   └── graph_testing.ipynb        # LangGraph pipeline testing
+│   ├── crag.ipynb                 # CRAG pipeline development and testing
+│   └── eval_test.ipynb            # RAGAS evaluation pipeline
 │
 ├── collections/                   # Qdrant persistent storage (local Docker)
 ├── data/raw/                      # Uploaded documents storage
@@ -316,11 +279,25 @@ User Query → Dense + Sparse Encoding → Qdrant Prefetch (10 each)
 
 Qdrant's native RRF fusion eliminates the need for custom fusion code. The cross-encoder then re-scores each `(query, chunk)` pair by attending to both together — far more accurate than bi-encoder similarity.
 
-### 3. LangGraph RAG Pipeline (Current)
+### 3. LangGraph CRAG Pipeline
 
 ```
-START → retriever_node → reranker_node → answer_node → END
+START → Query Router
+           ├── "retrieve" → Retrieve → Re-rank → Grade Documents
+           │                                        ├── relevant ✓ → Generate Answer → END
+           │                                        └── not relevant ✗ → Transform Query
+           │                                                              ├── retry ≤ 2 → Retrieve (loop)
+           │                                                              └── retry > 2 → Web Search → Generate Answer → END
+           └── "direct_llm" → Direct Generate → END
 ```
+
+The CRAG (Corrective RAG) pipeline adds **self-correction** to the standard RAG flow:
+
+- **Query Router** — classifies queries as document retrieval or direct LLM (keyword heuristics + structured LLM output)
+- **Document Grading** — an LLM evaluates whether retrieved chunks are relevant to the query
+- **Query Transform** — rewrites the query using an LLM when documents are graded as irrelevant
+- **Retry Loop** — retries retrieval up to 2 times with rewritten queries before falling back to web search
+- **Web Search Fallback** — uses Tavily to fetch live web results when local retrieval fails
 
 The LLM generates a grounded answer with strict citation rules — every response includes:
 - **Page numbers** from the source document
@@ -339,18 +316,15 @@ The LLM generates a grounded answer with strict citation rules — every respons
 - [x] LangGraph RAG pipeline (linear: Retrieve → Rerank → Generate)
 - [x] FastAPI REST endpoints (`/ingest`, `/retrieve`)
 - [x] LangSmith tracing integration
-
-### 🚧 In Progress
-- [ ] CRAG (Corrective RAG) pattern — document grading + query rewriting
-- [ ] Adaptive query routing (retrieval vs. web search)
-- [ ] Web search fallback via Tavily
-- [ ] Retry loops with configurable max attempts
-- [ ] Structured output parsing with Pydantic in generate node
+- [x] CRAG (Corrective RAG) pattern — document grading + query rewriting
+- [x] Adaptive query routing (retrieval vs. web search)
+- [x] Web search fallback via Tavily
+- [x] Retry loops with configurable max attempts
+- [x] Structured output parsing with Pydantic in generate node
+- [x] RAGAS evaluation (faithfulness, answer relevance, context recall)
 
 ### 📅 Upcoming 
-- [ ] RAGAS evaluation (faithfulness, answer relevance, context recall)
 - [ ] Streamlit UI with file upload, chat interface, and source viewer
-- [ ] Graph execution path visualization in UI
 - [ ] Docker Compose setup (Qdrant + Backend + Frontend)
 - [ ] GitHub Actions CI/CD pipeline
 - [ ] AWS EC2 deployment via ECR
@@ -366,4 +340,4 @@ Every query is traced end-to-end in **LangSmith**, providing:
 - ⏱️ **Latency breakdown** — time spent in retrieval, reranking, and generation
 - 💰 **Token usage** — prompt and completion tokens per LLM call
 - 🛤️ **Graph execution path** — which nodes were invoked and in what order
-- 📊 **RAGAS scores** *(planned)* — quality metrics logged as run-level feedback
+- 📊 **RAGAS scores**  — quality metrics logged as run-level feedback
