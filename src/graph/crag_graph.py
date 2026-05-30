@@ -1,6 +1,7 @@
 from langgraph.graph import StateGraph, START, END
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -40,7 +41,7 @@ class RagState(TypedDict):
     reranked_results: List[Dict]
 
     route: str
-    documents_relevant: bool
+    documents_relevant: str
 
     answer: str
 
@@ -179,12 +180,6 @@ async def reranker_node(state: RagState):
     return {'reranked_results': reranked_results}
 
 
-#  -> Grader
-class GradeDocuments(BaseModel):
-    relevant: bool = Field(
-        description="Whether the retrieved context is relevant to answer the question"
-    )
-
 
 grader_prompt = ChatPromptTemplate.from_template("""
 You are a retrieval relevance evaluator.
@@ -199,15 +194,14 @@ Question:
 Retrieved Context:
 {context}
 
-Rules:
-- Return relevant=true if the context contains useful information
-- Return relevant=false if the context is unrelated
-- Be strict
+ANSWER with ONLY : 
+
+true
+or 
+false
 """)
 
-structured_grading_llm = grading_llm.with_structured_output(GradeDocuments)
-
-grader_chain = grader_prompt | structured_grading_llm
+grader_chain = grader_prompt | grading_llm | StrOutputParser()
 
 # -> Grader node
 
@@ -217,7 +211,7 @@ async def grade_documents_node(state: RagState):
 
     docs = state['reranked_results']
 
-    context = "\n".join(
+    context = "\n\n".join(
         doc['document'] for doc in docs
     )
 
@@ -226,12 +220,12 @@ async def grade_documents_node(state: RagState):
         "context": context
     })
 
-    return {"documents_relevant": result.relevant}
+    return {"documents_relevant": result}
 
 
 # conditional edge
 async def decide_next_step(state: RagState):
-    if state['documents_relevant']:
+    if state['documents_relevant'].strip().lower() == "true":
         return "generate_answer"
     return "transform_query"
 
@@ -291,7 +285,7 @@ async def generate_answer_node(state: RagState):
         context = state['web_context']
     else:
         context = state['reranked_results']
-        context = context = "\n".join(
+        context = context = "\n\n".join(
             f"""
             Source: {chunk['metadata'].get('file_name')}
             Page: {chunk['metadata'].get('page')}
