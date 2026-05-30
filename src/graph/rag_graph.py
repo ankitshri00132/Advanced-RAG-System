@@ -23,6 +23,7 @@ searcher = HybridRetriever(
 class RagState(TypedDict):
 
     query: str
+    document_id : str
     retrieved_results: List[Dict]
     reranked_results: List[Dict]
     answer: str
@@ -81,7 +82,8 @@ prompt_template = ChatPromptTemplate([
 # building nodes
 async def retriever_node(state: RagState):
     query = state['query']
-    results = await asyncio.to_thread(searcher.search, query_text=query)
+    document_id = state.get('document_id')
+    results = await asyncio.to_thread(searcher.search, query_text=query, document_id=document_id)
     return {'retrieved_results': results}
 
 
@@ -89,7 +91,7 @@ async def reranker_node(state: RagState):
     query = state['query']
     retrieved_results = state['retrieved_results']
     reranked_results = await asyncio.to_thread(
-        get_reranked_documents, query=query, retrieved_results=retrieved_results, top_k=3)
+        get_reranked_documents, query=query, retrieved_results=retrieved_results, top_k=5)
     return {'reranked_results': reranked_results}
 
 

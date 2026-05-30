@@ -8,7 +8,7 @@ qdrant_client = QdrantClient(url='http://localhost:6333')
 
 @traceable(name="hybrid_retriever",run_type="retriever")
 class HybridRetriever :
-    DENSE_MODEL = 'BAAI/bge-small-en-v1.5'
+    DENSE_MODEL = 'BAAI/bge-base-en-v1.5'
     SPARSE_MODEL = 'Qdrant/bm42-all-minilm-l6-v2-attentions'
     dense_vector_name = 'dense'
     sparse_vector_name = 'sparse'
@@ -19,7 +19,19 @@ class HybridRetriever :
 
     # search function
 
-    def search(self,query_text : str):
+    def search(self, query_text: str, document_id: str = None):
+        # Build a payload filter if a document_id is provided
+        query_filter = None
+        if document_id:
+            query_filter = models.Filter(
+                must=[
+                    models.FieldCondition(
+                        key="document_id",
+                        match=models.MatchValue(value=document_id)
+                    )
+                ]
+            )
+
         search_result = self.qdrant_client.query_points(
             collection_name = self.collection_name,
             prefetch = [
@@ -35,6 +47,7 @@ class HybridRetriever :
                 ),
             ],
             query = models.FusionQuery(fusion=models.Fusion.RRF),
+            query_filter=query_filter,
             limit = 10
         ).points
 

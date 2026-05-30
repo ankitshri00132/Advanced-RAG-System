@@ -12,6 +12,7 @@ crag_app = crag()
 
 class SearchRequest(BaseModel):
     query: str
+    document_id: str = None
 
 
 @router.post('/retrieve')
@@ -22,7 +23,8 @@ async def retrieve_chunks(request: SearchRequest):
     try:
 
         result = await crag_app.ainvoke({         # --> result has the final_state of the graph
-            'query': request.query
+            'query': request.query,
+            'document_id': request.document_id
         })
 
         return {

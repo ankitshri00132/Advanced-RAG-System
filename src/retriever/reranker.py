@@ -9,7 +9,7 @@ reranker = TextCrossEncoder("jinaai/jina-reranker-v1-tiny-en")
 def get_reranked_documents(
     query: str, 
     retrieved_results: List[Dict[str, Any]], 
-    top_k: int = 3
+    top_k: int = 5
 ) -> List[Dict[str, Any]]:
     """
     Reranks initial retrieved search results and fetches them in sorted order.

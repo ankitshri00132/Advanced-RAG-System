@@ -9,7 +9,7 @@ def embed_chunks(chunks: list,document_id,filename):
 
     dense_vector_name = 'dense'
     sparse_vector_name = 'sparse'
-    dense_model_name = 'BAAI/bge-small-en-v1.5'
+    dense_model_name = 'BAAI/bge-base-en-v1.5'
     sparse_model_name = "Qdrant/bm42-all-minilm-l6-v2-attentions"
 
     # create a dict which contains page content and its metadata
