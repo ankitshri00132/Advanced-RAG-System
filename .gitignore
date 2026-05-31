@@ -3,3 +3,19 @@ data/
 /data
 collections/
 notebooks/
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Qdrant / Local DB state files
+raft_state.json
+
+# IDE and OS files
+.vscode/
+.DS_Store
+.pytest_cache/
