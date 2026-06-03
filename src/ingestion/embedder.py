@@ -1,11 +1,12 @@
 from qdrant_client import QdrantClient, models
+import os
 import uuid
 from dotenv import load_dotenv
 load_dotenv()
 
 
 def embed_chunks(chunks: list,document_id,filename):
-    client = QdrantClient(url='http://localhost:6333')
+    client = QdrantClient(url=os.getenv("QDRANT_URL"))
 
     dense_vector_name = 'dense'
     sparse_vector_name = 'sparse'

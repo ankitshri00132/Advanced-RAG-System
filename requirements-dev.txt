@@ -1,0 +1,42 @@
+# =========================
+# Core Frameworks
+# =========================
+langchain>=0.3.0
+langchain-community>=0.3.0
+langchain-core>=0.3.0
+langchain-text-splitters>=0.3.0
+langchain-groq
+tavily-python
+langgraph>=0.2.0
+
+# =========================
+# Vector DB & Embeddings / Reranker
+# =========================
+# FastEmbed natively supports the BGE models and Jina reranker WITHOUT needing PyTorch or Transformers!
+qdrant-client[fastembed]>=1.14.2
+
+# =========================
+# API Backend
+# =========================
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
+pydantic>=2.9.0
+
+# =========================
+# Document Parsing
+# =========================
+pypdf>=5.0.0
+pymupdf>=1.27.2.3
+docx2txt>=0.8
+unstructured>=0.16.0
+
+# =========================
+# Utilities & Environment
+# =========================
+python-dotenv>=1.0.1
+langsmith>=0.1.130
+loguru>=0.7.2
+numpy>=1.26.0
+pandas>=2.2.0
+tiktoken>=0.8.0

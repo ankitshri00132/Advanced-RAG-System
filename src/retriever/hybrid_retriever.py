@@ -1,10 +1,11 @@
 from dotenv import load_dotenv
+import os
 load_dotenv()
 
 from qdrant_client import QdrantClient,models
 from langsmith import traceable
 
-qdrant_client = QdrantClient(url='http://localhost:6333')
+qdrant_client = QdrantClient(url=os.getenv("QDRANT_URL"))
 
 @traceable(name="hybrid_retriever",run_type="retriever")
 class HybridRetriever :

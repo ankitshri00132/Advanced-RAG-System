@@ -2,8 +2,6 @@ from langgraph.graph import StateGraph, START, END
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_mistralai import ChatMistralAI
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.tools.tavily_search import TavilySearchResults
 from typing import TypedDict, List, Dict, Literal
 from pydantic import BaseModel, Field
@@ -23,9 +21,6 @@ grading_llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
 rewriter_llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
 router_llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
 safety_llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
-# llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite", temperature=0)
-# llm = ChatMistralAI(model="mistral-large-2512",temperature=0)
-
 
 # initialize the searcher
 searcher = HybridRetriever(collection_name="main_vector_store",

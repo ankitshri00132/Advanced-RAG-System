@@ -1,8 +1,6 @@
 from langgraph.graph import StateGraph, START, END
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_mistralai import ChatMistralAI
-from langchain_google_genai import ChatGoogleGenerativeAI
 from typing import TypedDict, List, Dict
 from dotenv import load_dotenv
 import asyncio
@@ -13,8 +11,6 @@ from src.retriever.reranker import reranker, get_reranked_documents
 load_dotenv()
 
 llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
-# llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite", temperature=0)
-# llm = ChatMistralAI(model="mistral-small-2603",temperature=0)
 
 searcher = HybridRetriever(
     collection_name="main_vector_store", qdrant_client=qdrant_client)
