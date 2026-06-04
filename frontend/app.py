@@ -8,11 +8,13 @@ Provides:
 
 import streamlit as st
 import requests
-
+import os
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-API_BASE_URL = "http://localhost:8000"  # FastAPI backend
+API_BASE_URL = os.getenv("API_BASE_URL",
+                        "http://localhost:8000"
+                        )  # FastAPI backend
 
 st.set_page_config(
     page_title="RAG Chat",
