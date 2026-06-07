@@ -5,7 +5,7 @@ load_dotenv()
 from qdrant_client import QdrantClient,models
 from langsmith import traceable
 
-qdrant_client = QdrantClient(url=os.getenv("QDRANT_URL"))
+qdrant_client = QdrantClient(url=os.getenv("QDRANT_URL"), api_key=os.getenv("QDRANT_API_KEY"), timeout=300)
 
 @traceable(name="hybrid_retriever",run_type="retriever")
 class HybridRetriever :

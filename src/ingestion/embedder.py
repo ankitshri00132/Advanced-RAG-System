@@ -6,7 +6,7 @@ load_dotenv()
 
 
 def embed_chunks(chunks: list,document_id,filename):
-    client = QdrantClient(url=os.getenv("QDRANT_URL"))
+    client = QdrantClient(url=os.getenv("QDRANT_URL"), api_key=os.getenv("QDRANT_API_KEY"), timeout=300)
 
     dense_vector_name = 'dense'
     sparse_vector_name = 'sparse'
@@ -39,6 +39,12 @@ def embed_chunks(chunks: list,document_id,filename):
                 sparse_vector_name: models.SparseVectorParams()
             },
 
+        )
+        # Qdrant Cloud requires explicit payload indexes for filtered queries
+        client.create_payload_index(
+            collection_name='main_vector_store',
+            field_name='document_id',
+            field_schema=models.PayloadSchemaType.KEYWORD
         )
         print("Collection created !")
     # uploading the embeddings to the db
